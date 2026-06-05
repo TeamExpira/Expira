@@ -619,6 +619,20 @@ input:focus-visible {
   gap: 1rem;
 }
 
+.product-form {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.product-form input {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 14px;
+  background: #111827;
+  color: var(--text);
+}
+
 .product-list .card {
   padding: 1.4rem;
   border-radius: 22px;
@@ -630,6 +644,11 @@ input:focus-visible {
 .product-list .card:hover {
   transform: translateY(-2px);
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.16);
+}
+
+.card.selected {
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 12px var(--accent);
 }
 
 .card h3 {
@@ -663,8 +682,24 @@ input:focus-visible {
 }
 
 .status.critical {
+  background: rgba(249, 115, 22, 0.18);
+  color: #fb923c;
+}
+
+.status.expired {
   background: rgba(239, 68, 68, 0.18);
   color: var(--danger);
+}
+
+.product-meta {
+  margin-top: 0.9rem;
+}
+
+.delete-product {
+  margin-top: 0.9rem;
+  padding: 0.65rem 1rem;
+  background: rgba(239, 68, 68, 0.16);
+  color: #fecaca;
 }
 
 .scanner-panel input[type="file"] {
