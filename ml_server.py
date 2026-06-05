@@ -2,12 +2,13 @@
 EXPIRA ML Server — run with: python ml_server.py
 Exposes your 3 ML modules as a REST API on port 5001
 """
-
+from dotenv import load_dotenv
+load_dotenv()  
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from ocr_engine import extract_expiry_from_image
 from classifier import classify_product, get_classification_details
-from reminder_scheduler import check_reminders_for_user
+from remainder_scheduler import check_reminders_for_user
 import os
 
 app = Flask(__name__)
