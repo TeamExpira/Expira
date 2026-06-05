@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { calculateDaysLeft, getProductStatus } from "../utils/expiryUtils.js";
 
 const productSchema = new mongoose.Schema(
   {
@@ -40,16 +41,12 @@ const productSchema = new mongoose.Schema(
 );
 
 productSchema.virtual("daysLeft").get(function () {
-  return Math.ceil((this.expiryDate - Date.now()) / (1000 * 60 * 60 * 24));
+  return calculateDaysLeft(this.expiryDate);
 });
 
 productSchema.virtual("status").get(function () {
-  const daysLeft = this.daysLeft;
-
-  if (daysLeft <= 0) return "Expired";
-  if (daysLeft <= 3) return "Critical";
-  if (daysLeft <= 10) return "Warning";
-  return "Safe";
+  const status = getProductStatus(this.daysLeft);
+  return status.charAt(0).toUpperCase() + status.slice(1);
 });
 
 export default mongoose.model("Product", productSchema);

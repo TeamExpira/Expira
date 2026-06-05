@@ -1,7 +1,7 @@
 import { readFile } from "fs/promises";
 
 const OCR_SERVICE_URL = process.env.OCR_SERVICE_URL || "http://localhost:5001/ml/scan";
-const OCR_TIMEOUT_MS = Number(process.env.OCR_TIMEOUT_MS || 30000);
+const OCR_TIMEOUT_MS = Number(process.env.OCR_TIMEOUT_MS || 120000);
 
 export class OcrServiceUnavailableError extends Error {
   constructor(message = "OCR service unavailable") {

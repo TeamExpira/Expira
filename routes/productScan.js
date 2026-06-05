@@ -1,6 +1,5 @@
 import { unlink } from "fs/promises";
 import express from "express";
-import Product from "../models/Product.js";
 import { authenticateToken } from "../middleware/auth.js";
 import { uploadProductImage } from "../middleware/upload.js";
 import { OcrServiceUnavailableError, scanImageWithOcr } from "../services/ocrService.js";
@@ -32,27 +31,15 @@ router.post("/", authenticateToken, uploadProductImage, async (req, res) => {
     }
 
     const parsedExpiryDate = getExpiryDate(ocrData.expiry_date);
-    const warning = parsedExpiryDate ? undefined : "Expiry date could not be detected";
 
-    const product = await Product.create({
-      name: ocrData.product_name || "Scanned Product",
-      category: ocrData.category || "General",
-      quantity: 1,
-      unit: "pcs",
-      expiryDate: parsedExpiryDate || new Date(),
-      addedBy: req.user.id,
-    });
-
-    console.log("Product created");
-
-    return res.status(201).json({
+    return res.status(200).json({
       success: true,
-      ...(warning ? { warning } : {}),
-      product,
-      ocr: {
-        raw_date: ocrData.raw_date || null,
-        confidence: ocrData.confidence ?? 0,
-      },
+      product_name: ocrData.product_name || "",
+      category: ocrData.category || "",
+      expiry_date: parsedExpiryDate ? parsedExpiryDate.toISOString().slice(0, 10) : "",
+      raw_date: ocrData.raw_date || null,
+      confidence: ocrData.confidence ?? 0,
+      ...(parsedExpiryDate ? {} : { warning: "Expiry date not detected. Please enter manually." }),
     });
   } catch (error) {
     if (error instanceof OcrServiceUnavailableError) {

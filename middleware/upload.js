@@ -4,8 +4,15 @@ import multer from "multer";
 
 const UPLOAD_DIR = path.resolve("uploads");
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
-const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/jpg", "image/png"]);
-const ALLOWED_IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png"]);
+const ALLOWED_IMAGE_TYPES = new Set([
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "image/bmp",
+  "image/tiff",
+]);
+const ALLOWED_IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff"]);
 
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
@@ -28,7 +35,7 @@ const productImageUpload = multer({
     const extension = path.extname(file.originalname).toLowerCase();
 
     if (!ALLOWED_IMAGE_TYPES.has(file.mimetype) || !ALLOWED_IMAGE_EXTENSIONS.has(extension)) {
-      return callback(new Error("Only JPG and PNG images are allowed."));
+      return callback(new Error("Only JPG, PNG, WEBP, BMP, and TIFF images are allowed."));
     }
 
     callback(null, true);

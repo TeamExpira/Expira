@@ -51,6 +51,11 @@ function ProductList({ onProductSelect = () => {}, selectedProduct = null }) {
 
   useEffect(() => {
     fetchProducts();
+    window.addEventListener("products:changed", fetchProducts);
+
+    return () => {
+      window.removeEventListener("products:changed", fetchProducts);
+    };
   }, []);
 
   function handleChange(event) {
@@ -84,7 +89,6 @@ function ProductList({ onProductSelect = () => {}, selectedProduct = null }) {
       }
 
       setFormData(initialForm);
-      await fetchProducts();
       window.dispatchEvent(new Event("products:changed"));
     } catch (submitError) {
       setError(submitError.message);
@@ -109,7 +113,6 @@ function ProductList({ onProductSelect = () => {}, selectedProduct = null }) {
         throw new Error(data.message || "Unable to delete product.");
       }
 
-      await fetchProducts();
       window.dispatchEvent(new Event("products:changed"));
       if (selectedProduct?._id === productId) {
         onProductSelect(null);

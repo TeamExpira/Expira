@@ -64,3 +64,9 @@ async def scan_product_image(image: UploadFile = File(...)):
         return {"success": False, "error": str(error)}
     finally:
         upload_path.unlink(missing_ok=True)
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("app:app", host="127.0.0.1", port=5001, reload=False)

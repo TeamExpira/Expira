@@ -8,29 +8,60 @@ const BOXES = [
   { id: "Critical", position: [2, 0.5, 0], baseColor: "#ef4444", emissiveColor: "#f87171" },
 ];
 
-function ProductBox({ id, position, baseColor, emissiveColor, isActive, isIdle }) {
+function getLightBehavior(status, elapsedTime) {
+  if (status === "expired") {
+    const flashing = Math.sin(elapsedTime * 10) > 0 ? 2.8 : 0.35;
+    return { intensity: flashing, scale: flashing > 1 ? 1.22 : 1.02 };
+  }
+
+  if (status === "critical") {
+    const pulse = 1.4 + Math.sin(elapsedTime * 4.5) * 0.55;
+    return { intensity: pulse, scale: 1.08 + Math.sin(elapsedTime * 4.5) * 0.08 };
+  }
+
+  if (status === "warning") {
+    const glow = 0.85 + Math.sin(elapsedTime * 2) * 0.2;
+    return { intensity: glow, scale: 1.05 };
+  }
+
+  if (status === "safe") {
+    return { intensity: 0.9, scale: 1.08 };
+  }
+
+  const idlePulse = 0.4 + Math.sin(elapsedTime * 2) * 0.2;
+  return { intensity: idlePulse, scale: 1 };
+}
+
+function ProductBox({ id, position, baseColor, emissiveColor, activeStatus, isActive, isIdle }) {
   const meshRef = useRef(null);
   const materialRef = useRef(null);
+  const pointLightRef = useRef(null);
 
   useFrame(({ clock }) => {
     if (!meshRef.current || !materialRef.current) return;
 
-    const idlePulse = 0.4 + Math.sin(clock.elapsedTime * 2) * 0.2;
-    const targetIntensity = isIdle ? idlePulse : isActive ? 1.5 : 0.05;
-    const targetScale = isActive ? 1.15 : isIdle ? 1 : 0.9;
+    const behavior = getLightBehavior(isActive || isIdle ? activeStatus : null, clock.elapsedTime);
+    const targetIntensity = isIdle ? behavior.intensity : isActive ? behavior.intensity : 0.05;
+    const targetScale = isActive || isIdle ? behavior.scale : 0.9;
 
     materialRef.current.emissiveIntensity +=
       (targetIntensity - materialRef.current.emissiveIntensity) * 0.08;
     meshRef.current.scale.x += (targetScale - meshRef.current.scale.x) * 0.08;
     meshRef.current.scale.y += (targetScale - meshRef.current.scale.y) * 0.08;
     meshRef.current.scale.z += (targetScale - meshRef.current.scale.z) * 0.08;
+
+    if (pointLightRef.current) {
+      const targetLightIntensity = isActive ? targetIntensity * 1.55 : isIdle ? 0.55 : 0;
+      pointLightRef.current.intensity +=
+        (targetLightIntensity - pointLightRef.current.intensity) * 0.12;
+    }
   });
 
   const labelOpacity = isIdle ? 0.7 : isActive ? 1 : 0.4;
 
   return (
     <group position={position}>
-      <pointLight color={emissiveColor} intensity={isActive ? 2 : 0} distance={4} position={[0, 2, 0]} />
+      <pointLight ref={pointLightRef} color={emissiveColor} intensity={0} distance={4} position={[0, 2, 0]} />
       <mesh ref={meshRef} castShadow>
         <boxGeometry args={[1.2, 1.2, 1.2]} />
         <meshStandardMaterial
@@ -58,7 +89,8 @@ function ProductBox({ id, position, baseColor, emissiveColor, isActive, isIdle }
 }
 
 export default function ThreeScene({ selectedStatus = null }) {
-  const normalizedStatus = selectedStatus === "Expired" ? "Critical" : selectedStatus;
+  const normalizedStatus = selectedStatus?.toLowerCase() ?? null;
+  const activeBox = normalizedStatus === "expired" ? "Critical" : selectedStatus;
   const isIdle = normalizedStatus === null;
 
   return (
@@ -86,7 +118,8 @@ export default function ThreeScene({ selectedStatus = null }) {
           <ProductBox
             key={box.id}
             {...box}
-            isActive={box.id === normalizedStatus}
+            activeStatus={isIdle ? box.id.toLowerCase() : normalizedStatus}
+            isActive={box.id === activeBox}
             isIdle={isIdle}
           />
         ))}
