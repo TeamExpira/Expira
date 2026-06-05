@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL, setAuthSession } from "../config/api";
 
 function Signup() {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ function Signup() {
     }
 
     try {
-      const response = await fetch("http://localhost:4003/api/auth/signup", {
+      const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -37,8 +38,7 @@ function Signup() {
         return;
       }
 
-      localStorage.setItem("expiraAuthToken", data.token);
-      localStorage.setItem("expiraUserEmail", data.user.email);
+      setAuthSession(data.token, data.user.email);
       navigate("/dashboard");
     } catch (error) {
       console.error(error);
