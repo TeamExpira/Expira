@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-
-const API_URL = "http://localhost:4000";
+import { API_BASE_URL, authHeaders, handleUnauthorized } from "../config/api";
 
 const initialForm = {
   name: "",
@@ -27,17 +26,15 @@ function ProductList({ onProductSelect = () => {}, selectedProduct = null }) {
   const [error, setError] = useState("");
 
   async function fetchProducts() {
-    const token = localStorage.getItem("token");
-
     setLoading(true);
     setError("");
 
     try {
-      const response = await fetch(`${API_URL}/api/products`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await fetch(`${API_BASE_URL}/api/products`, {
+        headers: authHeaders(),
       });
+      handleUnauthorized(response);
+
       const data = await response.json();
 
       if (!response.ok) {
@@ -63,23 +60,23 @@ function ProductList({ onProductSelect = () => {}, selectedProduct = null }) {
 
   async function handleSubmit(event) {
     event.preventDefault();
-    const token = localStorage.getItem("token");
 
     setSaving(true);
     setError("");
 
     try {
-      const response = await fetch(`${API_URL}/api/products`, {
+      const response = await fetch(`${API_BASE_URL}/api/products`, {
         method: "POST",
-        headers: {
+        headers: authHeaders({
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        }),
         body: JSON.stringify({
           ...formData,
           quantity: Number(formData.quantity),
         }),
       });
+      handleUnauthorized(response);
+
       const data = await response.json();
 
       if (!response.ok) {
@@ -97,17 +94,15 @@ function ProductList({ onProductSelect = () => {}, selectedProduct = null }) {
   }
 
   async function handleDelete(productId) {
-    const token = localStorage.getItem("token");
-
     setError("");
 
     try {
-      const response = await fetch(`${API_URL}/api/products/${productId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/products/${productId}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: authHeaders(),
       });
+      handleUnauthorized(response);
+
       const data = await response.json();
 
       if (!response.ok) {

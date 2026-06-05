@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import ThreeScene from "./ThreeSceneNew";
 import ProductList from "./ProductList";
 import ProductScanner from "./ProductScanner";
-
-const API_URL = "http://localhost:4000";
+import { API_BASE_URL, authHeaders, clearAuthSession, handleUnauthorized } from "../config/api";
 
 function Dashboard() {
+  const navigate = useNavigate();
   const [productStats, setProductStats] = useState({
     total: 0,
     warning: 0,
@@ -16,14 +17,12 @@ function Dashboard() {
 
   useEffect(() => {
     async function fetchStats() {
-      const token = localStorage.getItem("token");
-
       try {
-        const response = await fetch(`${API_URL}/api/products/stats`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const response = await fetch(`${API_BASE_URL}/api/products/stats`, {
+          headers: authHeaders(),
         });
+        handleUnauthorized(response);
+
         const data = await response.json();
 
         if (!response.ok) {
@@ -43,6 +42,11 @@ function Dashboard() {
       window.removeEventListener("products:changed", fetchStats);
     };
   }, []);
+
+  function handleLogout() {
+    clearAuthSession();
+    navigate("/login", { replace: true });
+  }
 
   const stats = [
     { label: "Total Products", value: productStats.total, accent: "var(--accent)" },
@@ -64,6 +68,9 @@ function Dashboard() {
             Monitor product freshness, inspect items using the scanner, and review expiry risks in one place.
           </p>
         </div>
+        <button className="logout-button" type="button" onClick={handleLogout}>
+          Logout
+        </button>
       </div>
 
       <div className="stats-grid">
