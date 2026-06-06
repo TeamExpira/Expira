@@ -5,7 +5,7 @@ import cors from "cors";
 import authRoutes from "./routes/authRoutes.js";
 import productScanRoutes from "./routes/productScan.js";
 import productRoutes from "./routes/productRoutes.js";
-import { startExpiryReminderCron } from "./cron/expiryCron.js";
+import { startExpiryReminderCron } from "./cron/expiryReminderCron.js";
 
 dotenv.config();
 
