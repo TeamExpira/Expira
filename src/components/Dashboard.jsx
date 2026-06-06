@@ -1,14 +1,19 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ThreeScene from "./ThreeSceneNew";
 import ProductList from "./ProductList";
 import ProductScanner from "./ProductScanner";
+import CriticalAlertBanner from "./CriticalAlertBanner";
+import { useExpiryAlerts } from "../hooks/useExpiryAlerts";
 import { API_BASE_URL, authHeaders, clearAuthSession, handleUnauthorized } from "../config/api";
 import { calculateDaysLeft, formatExpiryDate, getProductStatus, getStatusLabel } from "../utils/expiryUtils";
+
+const CRITICAL_ALARM_SESSION_KEY = "expiraCriticalAlarmPlayed";
 
 async function playCriticalAlarm() {
   try {
     const alarm = new Audio("/alarm.mp3");
+    alarm.preload = "auto";
     await alarm.play();
     return;
   } catch {
@@ -37,15 +42,14 @@ async function playCriticalAlarm() {
 
 function Dashboard() {
   const navigate = useNavigate();
-  const alarmedProductRef = useRef(null);
   const [productStats, setProductStats] = useState({
     total: 0,
     warning: 0,
     critical: 0,
   });
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [criticalAlert, setCriticalAlert] = useState(null);
   const [statsError, setStatsError] = useState("");
+  const { criticalProducts, hasCriticalProducts, error: expiryAlertError } = useExpiryAlerts();
 
   useEffect(() => {
     async function fetchStats() {
@@ -62,6 +66,7 @@ function Dashboard() {
         }
 
         setProductStats(data);
+        setStatsError("");
       } catch (error) {
         setStatsError(error.message);
       }
@@ -76,52 +81,13 @@ function Dashboard() {
   }, []);
 
   useEffect(() => {
-    async function checkCriticalProducts() {
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/products`, {
-          headers: authHeaders(),
-        });
-        handleUnauthorized(response);
-
-        const products = await response.json();
-
-        if (!response.ok) {
-          throw new Error(products.message || "Unable to fetch products.");
-        }
-
-        const urgentProduct = products.find((product) => {
-          const daysLeft = calculateDaysLeft(product.expiryDate);
-          return daysLeft !== null && (daysLeft < 0 || daysLeft <= 3);
-        });
-
-        if (!urgentProduct) {
-          setCriticalAlert(null);
-          alarmedProductRef.current = null;
-          return;
-        }
-
-        const daysLeft = calculateDaysLeft(urgentProduct.expiryDate);
-        setCriticalAlert({
-          ...urgentProduct,
-          daysLeft,
-        });
-
-        if (alarmedProductRef.current !== urgentProduct._id) {
-          alarmedProductRef.current = urgentProduct._id;
-          playCriticalAlarm();
-        }
-      } catch (error) {
-        setStatsError(error.message);
-      }
+    if (!hasCriticalProducts || sessionStorage.getItem(CRITICAL_ALARM_SESSION_KEY)) {
+      return;
     }
 
-    checkCriticalProducts();
-    window.addEventListener("products:changed", checkCriticalProducts);
-
-    return () => {
-      window.removeEventListener("products:changed", checkCriticalProducts);
-    };
-  }, []);
+    sessionStorage.setItem(CRITICAL_ALARM_SESSION_KEY, "true");
+    playCriticalAlarm();
+  }, [hasCriticalProducts]);
 
   function handleLogout() {
     clearAuthSession();
@@ -147,13 +113,6 @@ function Dashboard() {
       : selectedDaysLeft < 0
       ? `${Math.abs(selectedDaysLeft)} day${Math.abs(selectedDaysLeft) === 1 ? "" : "s"} expired`
       : `${selectedDaysLeft} day${selectedDaysLeft === 1 ? "" : "s"} remaining`;
-  const alertDaysText =
-    criticalAlert?.daysLeft < 0
-      ? `${criticalAlert.name} has expired.`
-      : `${criticalAlert?.name} expires in ${criticalAlert?.daysLeft} day${
-          criticalAlert?.daysLeft === 1 ? "" : "s"
-        }.`;
-
   return (
     <div className="dashboard" onClick={() => setSelectedProduct(null)}>
       <div className="dashboard-header">
@@ -169,12 +128,7 @@ function Dashboard() {
         </button>
       </div>
 
-      {criticalAlert && (
-        <div className="critical-banner" role="alert">
-          <strong>Critical Product Detected</strong>
-          <span>{alertDaysText}</span>
-        </div>
-      )}
+      <CriticalAlertBanner products={criticalProducts} />
 
       <div className="stats-grid">
         {stats.map((item) => (
@@ -184,7 +138,7 @@ function Dashboard() {
           </div>
         ))}
       </div>
-      {statsError && <p className="form-message">{statsError}</p>}
+      {(statsError || expiryAlertError) && <p className="form-message">{statsError || expiryAlertError}</p>}
 
       <div className="scene-status-grid">
         <div className="scene-container">
