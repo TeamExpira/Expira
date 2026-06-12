@@ -5,6 +5,9 @@ import cors from "cors";
 import authRoutes from "./routes/authRoutes.js";
 import productScanRoutes from "./routes/productScan.js";
 import productRoutes from "./routes/productRoutes.js";
+import challengeRoutes from "./routes/challengeRoutes.js";
+import pointRoutes from "./routes/pointRoutes.js";
+import ecoScoreRoutes from "./routes/ecoScoreRoutes.js";
 import { startExpiryReminderCron } from "./cron/expiryReminderCron.js";
 
 dotenv.config();
@@ -23,6 +26,9 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/products/scan", productScanRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/challenges", challengeRoutes);
+app.use("/api/points", pointRoutes);
+app.use("/api/eco-score", ecoScoreRoutes);
 
 app.get("/", (req, res) => {
   res.send("Expira authentication server is running.");
