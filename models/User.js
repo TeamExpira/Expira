@@ -18,6 +18,33 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin"],
       default: "user",
     },
+    ecoPoints: {
+      type: Number,
+      default: 0,
+    },
+    pointTransactions: [
+      {
+        productId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Product",
+          required: true,
+        },
+        productName: {
+          type: String,
+          required: true,
+          trim: true,
+        },
+        pointsAwarded: {
+          type: Number,
+          required: true,
+          min: 0,
+        },
+        awardedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   {
     timestamps: true,

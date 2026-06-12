@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.use(authenticateToken);
 
-const allowedUpdates = ["name", "category", "quantity", "unit", "expiryDate"];
+const allowedUpdates = ["name", "category", "quantity", "unit", "expiryDate", "estimatedValue"];
 
 router.get("/", async (req, res) => {
   try {
@@ -20,7 +20,7 @@ router.get("/", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const { name, category, quantity, unit, expiryDate } = req.body;
+    const { name, category, quantity, unit, expiryDate, estimatedValue } = req.body;
 
     if (!name || !expiryDate) {
       return res.status(400).json({ message: "Name and expiry date are required." });
@@ -32,6 +32,7 @@ router.post("/", async (req, res) => {
       quantity,
       unit,
       expiryDate,
+      estimatedValue,
       addedBy: req.user.id,
     });
 
